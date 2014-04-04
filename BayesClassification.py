@@ -51,21 +51,39 @@ class DataFile:
         else:
             self.load()
 
-        self.sumWords = sum(self.wordsCount.values())
+        self.calculateWordsCount()
+        self.wordsSum = sum(self.wordsCount.values())
 
     def load(self):
+        """
+        Load words from fileContent for file that contains only message
+        :return: None
+        """
 
         self.words = self.fileContent.split()
+
+    def loadTagged(self):
+        """
+        Load words from fileContent for file that contains more information with message
+        :return: None
+        """
+        for line in self.fileContent.split("\n"):
+            try:
+                self.words.append(line.split("\t")[2])
+            except IndexError:
+                pass
+
+    def calculateWordsCount(self):
+        """
+        Calculate the number of occurrence of words.
+        :return: None
+        """
 
         for word in self.words:
             try:
                 self.wordsCount[word] += 1
             except KeyError:
                 self.wordsCount[word] = 1
-
-    def loadTagged(self):
-        # TODO
-        pass
 
     def __repr__(self):
         information = "Input file : " + self.fileContent + "\n"
@@ -75,7 +93,7 @@ class DataFile:
             information += str(key) + " " + str(value) + "\n"
 
         information += "============" + "\n"
-        information += "Word count : " + str(self.sumWords) + "\n"
+        information += "Word count : " + str(self.wordsSum) + "\n"
 
         return information
 
@@ -141,7 +159,7 @@ class DataSet:
         """
         Training for Bayes algorithm
 
-        :return: null
+        :return: None
         """
         maxIndexPositive = int(0.8 * len(self.dataPositive))
         maxIndexNegative = int(0.8 * len(self.dataNegative))
@@ -155,7 +173,7 @@ class DataSet:
         Testing results from bayes algorithm
         Save number of correct values
 
-        :return: null
+        :return: None
         """
         maxIndexPositive = int(0.8 * len(self.dataPositive))
         maxIndexNegative = int(0.8 * len(self.dataNegative))
@@ -207,13 +225,13 @@ if __name__ == '__main__':
     random.seed()
 
     dataSet = DataSet("./data", False)
-    # print(dataSet.dataPositive[500])
+    print(dataSet.dataPositive[500])
     dataSet.train()
     dataSet.test()
     print(dataSet.evaluate())
 
     dataSetTagged = DataSet("./data/tagged", True)
-    # print(dataSet.dataPositive[500])
+    print(dataSetTagged.dataPositive[500])
     dataSetTagged.train()
     dataSetTagged.test()
     print(dataSetTagged.evaluate())
