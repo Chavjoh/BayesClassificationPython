@@ -21,6 +21,8 @@
 import sys
 from os import walk
 import random
+from collections import Counter
+import functools
 
 #------------------------------------------------------------------------------#
 #                                                                              #
@@ -109,12 +111,18 @@ class DataSet:
         :return: object
         """
         self.testSuccess = 0
+
         self.dataPositive = []
         self.dataNegative = []
+
         self.isTagged = isTagged
+
         self.dataPath = dataSetPath
         self.positivePath = self.dataPath + "/positive"
         self.negativePath = self.dataPath + "/negative"
+
+        self.wordsProbabilityPositive = {}
+        self.wordsProbabilityNegative = {}
 
         self.load(self.dataPath)
 
@@ -155,18 +163,55 @@ class DataSet:
 
             break
 
+    def calculateProbability(self):
+        """
+        Calculate the probability for each word to be positive of negative
+        :return: None
+        """
+        maxIndexPositive = int(0.8 * len(self.dataPositive))
+        maxIndexNegative = int(0.8 * len(self.dataNegative))
+
+        # 80% of data used for training
+        wordsAllPositive = self.reduceWordsCount(self.dataPositive[:maxIndexPositive])
+        wordsAllNegative = self.reduceWordsCount(self.dataNegative[:maxIndexNegative])
+
+        for word, number in wordsAllPositive.items():
+            self.wordsProbabilityPositive[word] = \
+                (wordsAllPositive[word] + 1) / (sum(wordsAllPositive.values()) + len(wordsAllPositive))
+
+        for word, number in wordsAllNegative.items():
+            self.wordsProbabilityNegative[word] = \
+                (wordsAllNegative[word] + 1) / (sum(wordsAllNegative.values()) + len(wordsAllNegative))
+
+    @staticmethod
+    def reduceWordsCount(dataList):
+        """
+        Reduce the count of all words to one dictionary
+        :param dataList: DataFile list to reduce
+        :type dataList: list of dataFile
+        :return: None
+        """
+
+        wordsAll = {}
+
+        for data in dataList:
+            for word, value in data.wordsCount.items():
+                try:
+                    wordsAll[word] += value
+                except KeyError:
+                    wordsAll[word] = value
+
+        return wordsAll
+
     def train(self):
         """
         Training for Bayes algorithm
 
         :return: None
         """
-        maxIndexPositive = int(0.8 * len(self.dataPositive))
-        maxIndexNegative = int(0.8 * len(self.dataNegative))
 
-        for data in (self.dataPositive[:maxIndexPositive] + self.dataNegative[:maxIndexNegative]):
-            # TODO
-            pass
+        self.calculateProbability()
+
 
     def test(self):
         """
@@ -178,10 +223,15 @@ class DataSet:
         maxIndexPositive = int(0.8 * len(self.dataPositive))
         maxIndexNegative = int(0.8 * len(self.dataNegative))
 
-        for data in (self.dataPositive[maxIndexPositive:] + self.dataNegative[maxIndexNegative:]):
-            # TODO
-            # Update self.testSuccess
-            pass
+        for data in self.dataPositive[maxIndexPositive:]:
+            # If positive
+            if self.classify(data):
+                self.testSuccess += 1
+
+        for data in self.dataNegative[maxIndexNegative:]:
+            # If negative
+            if not self.classify(data):
+                self.testSuccess += 1
 
     def evaluate(self):
         """
@@ -201,8 +251,10 @@ class DataSet:
         :return: True if positive, False otherwise
         """
 
+        
+
         # TODO
-        pass
+        return True
 
 #------------------------------------------------------------------------------#
 #                                                                              #
@@ -224,12 +276,18 @@ if __name__ == '__main__':
 
     random.seed()
 
+    #
+    # NORMAL DATA SET
+    #
     dataSet = DataSet("./data", False)
     print(dataSet.dataPositive[500])
     dataSet.train()
     dataSet.test()
     print(dataSet.evaluate())
 
+    #
+    # TAGGED DATA SET
+    #
     dataSetTagged = DataSet("./data/tagged", True)
     print(dataSetTagged.dataPositive[500])
     dataSetTagged.train()
