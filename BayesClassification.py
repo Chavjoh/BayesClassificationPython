@@ -212,7 +212,6 @@ class DataSet:
 
         self.calculateProbability()
 
-
     def test(self):
         """
         Testing results from bayes algorithm
@@ -251,10 +250,26 @@ class DataSet:
         :return: True if positive, False otherwise
         """
 
-        
+        # Initialization
+        probabilityPositive = 1
+        probabilityNegative = 1
 
-        # TODO
-        return True
+        for word, probability in self.wordsProbabilityPositive.items():
+            try:
+                probabilityPositive *= pow(probability, dataFile.wordsCount[word])
+            except KeyError:
+                pass
+
+        for word, probability in self.wordsProbabilityNegative.items():
+            try:
+                probabilityNegative *= pow(probability, dataFile.wordsCount[word])
+            except KeyError:
+                pass
+
+        if (probabilityPositive > probabilityNegative):
+            return True
+        else:
+            return False
 
 #------------------------------------------------------------------------------#
 #                                                                              #
@@ -280,7 +295,7 @@ if __name__ == '__main__':
     # NORMAL DATA SET
     #
     dataSet = DataSet("./data", False)
-    print(dataSet.dataPositive[500])
+    # print(dataSet.dataPositive[500])
     dataSet.train()
     dataSet.test()
     print(dataSet.evaluate())
@@ -289,7 +304,7 @@ if __name__ == '__main__':
     # TAGGED DATA SET
     #
     dataSetTagged = DataSet("./data/tagged", True)
-    print(dataSetTagged.dataPositive[500])
+    # print(dataSetTagged.dataPositive[500])
     dataSetTagged.train()
     dataSetTagged.test()
     print(dataSetTagged.evaluate())
