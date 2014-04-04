@@ -30,11 +30,34 @@ from os import walk
 
 class DataFile:
     """ Contains file analysis information """
-
     def __init__(self, fileLine, isGood):
-        # print(fileLine)
-        print(isGood)
+        """
 
+        :rtype : object
+        """
+        self.isGood = isGood
+        self.fileLine = fileLine
+        self.wordsCount = {}
+
+        self.words = fileLine.split()
+
+        for word in self.words:
+            try:
+                self.wordsCount[word] += 1
+            except KeyError:
+                self.wordsCount[word] = 1
+
+        self.sumWords = sum(self.wordsCount.values())
+
+    def __repr__(self):
+        print("input : "+self.fileLine)
+
+        for key, val in self.wordsCount.items():
+            print(str(key)+" "+str(val))
+
+        print(str(self.sumWords))
+
+        return ""
 
 class DataSet:
     """ Contains all DataFile """
