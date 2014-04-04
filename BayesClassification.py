@@ -29,10 +29,11 @@ from os import walk
 
 
 class DataFile:
-    
     """ Contains file analysis information """
+
     def __init__(self, fileLine, isGood):
         """
+        Create a new DataFile
         :param fileLine: Data file content (=message) in one line
         :type fileLine: str
         :param isGood: True if positive message, False otherwise
@@ -54,21 +55,28 @@ class DataFile:
         self.sumWords = sum(self.wordsCount.values())
 
     def __repr__(self):
-        information = "Input file : " + self.fileLine
+        information = "Input file : " + self.fileLine + "\n"
+        information += "============" + "\n"
 
         for key, value in self.wordsCount.items():
-            information += str(key) + " " + str(value)
+            information += str(key) + " " + str(value) + "\n"
 
-        information += "Word count : " + str(self.sumWords)
+        information += "============" + "\n"
+        information += "Word count : " + str(self.sumWords) + "\n"
 
         return information
 
 class DataSet:
     """ Contains all DataFile """
 
-    def __init__(self):
+    def __init__(self, dataSetPath):
+        """
+        :param dataSetPath: Path to data set folder that contains positive and negative folder messages
+        :type dataSetPath: str
+        :return: object
+        """
         self.data = []
-        self.dataPath = "./data"
+        self.dataPath = dataSetPath
         self.positivePath = self.dataPath + "/positive"
         self.negativePath = self.dataPath + "/negative"
 
@@ -77,7 +85,6 @@ class DataSet:
     def load(self, path):
 
         # print("Directory" + path)
-
         for (directoryPath, subDirectoryList, fileNameList) in walk(path):
 
             # Debug
@@ -89,7 +96,7 @@ class DataSet:
                 isGood = True if directoryPath == self.positivePath else False
 
                 for fileName in fileNameList:
-                    print(directoryPath + '/' + fileName)
+                    # print(directoryPath + '/' + fileName)
                     fileContent = ''.join(open(directoryPath + '/' + fileName, 'r', encoding="utf-8").readlines())
                     self.data.append(DataFile(fileContent, isGood))
 
@@ -116,5 +123,5 @@ if __name__ == '__main__':
     argsCount = len(sys.argv)
     argsIndex = 1
 
-    dataset = DataSet()
-
+    dataSet = DataSet("./data")
+    print(dataSet.data[1500])
