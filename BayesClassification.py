@@ -102,7 +102,7 @@ class DataSet:
                 for index, fileName in enumerate(fileNameList):
                     # print(directoryPath + '/' + fileName)
                     fileContent = ''.join(open(directoryPath + '/' + fileName, 'r', encoding="utf-8").readlines())
-                    
+
                     if isGood:
                         self.dataPositive.append(DataFile(fileContent, isGood))
                     else:
