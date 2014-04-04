@@ -103,11 +103,8 @@ class DataSet:
                     # print(directoryPath + '/' + fileName)
                     fileContent = ''.join(open(directoryPath + '/' + fileName, 'r', encoding="utf-8").readlines())
 
-                    if isGood:
-                        self.dataPositive.append(DataFile(fileContent, isGood))
-                    else:
-                        self.dataNegative.append(DataFile(fileContent, isGood))
-
+                    self.dataPositive.append(DataFile(fileContent, isPositive)) if isPositive \
+                        else self.dataNegative.append(DataFile(fileContent, isPositive))
 
             for subDirectory in subDirectoryList:
                 self.load(path + "/" + subDirectory)
