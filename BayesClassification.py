@@ -21,8 +21,6 @@
 import sys
 from os import walk
 import random
-from collections import Counter
-import functools
 
 #------------------------------------------------------------------------------#
 #                                                                              #
@@ -298,7 +296,7 @@ if __name__ == '__main__':
     # print(dataSet.dataPositive[500])
     dataSet.train()
     dataSet.test()
-    print(dataSet.evaluate())
+    print("Evaluation accuracy (normal) : " + str(dataSet.evaluate()))
 
     #
     # TAGGED DATA SET
@@ -307,4 +305,4 @@ if __name__ == '__main__':
     # print(dataSetTagged.dataPositive[500])
     dataSetTagged.train()
     dataSetTagged.test()
-    print(dataSetTagged.evaluate())
+    print("Evaluation accuracy (tagged) : " + str(dataSetTagged.evaluate()))
