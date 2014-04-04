@@ -105,7 +105,7 @@ class DataSet:
                     else:
                         self.dataNegative.append(DataFile(fileContent, isGood))
 
-                    
+
 
                     self.data.append(DataFile(fileContent, isGood))
 
