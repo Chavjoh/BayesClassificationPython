@@ -114,16 +114,41 @@ class DataSet:
 
             break
 
-    def classify(self):
+    def train(self):
+        """
+        Training for Bayes algorithm
 
-        maxIndexPositive = 0.8 * self.dataPositive.count()
-        maxIndexNegative = 0.8 * self.dataNegative.count()
+        :return: null
+        """
+        maxIndexPositive = int(0.8 * self.dataPositive.count())
+        maxIndexNegative = int(0.8 * self.dataNegative.count())
 
         for data in (self.dataPositive[:maxIndexPositive] + self.dataNegative[:maxIndexNegative]):
 
             pass
 
+    def test(self):
+        """
+        Testing results from bayes algorithm
 
+        :return: null
+        """
+        maxIndexPositive = int(0.8 * self.dataPositive.count())
+        maxIndexNegative = int(0.8 * self.dataNegative.count())
+
+        for data in (self.dataPositive[maxIndexPositive:] + self.dataNegative[maxIndexNegative:]):
+
+            pass
+
+    def classify(self, dataFile):
+        """
+        Classify a dataFile to positive or negative
+
+        :param dataFile: DataFile to classify
+        :return: True if positive, False otherwise
+        """
+
+        pass
 
 #------------------------------------------------------------------------------#
 #                                                                              #
