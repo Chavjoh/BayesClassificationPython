@@ -20,6 +20,7 @@
 
 import sys
 from os import walk
+import random
 
 #------------------------------------------------------------------------------#
 #                                                                              #
@@ -95,7 +96,9 @@ class DataSet:
             if directoryPath in [self.positivePath, self.negativePath]:
                 isGood = True if directoryPath == self.positivePath else False
 
-                for fileName in fileNameList:
+                random.shuffle(fileNameList)
+                maxIndex = len(fileNameList)
+                for index, fileName in enumerate(fileNameList):
                     # print(directoryPath + '/' + fileName)
                     fileContent = ''.join(open(directoryPath + '/' + fileName, 'r', encoding="utf-8").readlines())
                     self.data.append(DataFile(fileContent, isGood))
@@ -122,6 +125,8 @@ class DataSet:
 if __name__ == '__main__':
     argsCount = len(sys.argv)
     argsIndex = 1
+
+    random.seed()
 
     dataSet = DataSet("./data")
     print(dataSet.data[1500])
