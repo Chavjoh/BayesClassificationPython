@@ -32,16 +32,16 @@ import random
 class DataFile:
     """ Contains file analysis information """
 
-    def __init__(self, fileLine, isGood):
+    def __init__(self, fileLine, isPositive):
         """
         Create a new DataFile
         :param fileLine: Data file content (=message) in one line
         :type fileLine: str
-        :param isGood: True if positive message, False otherwise
-        :type isGood: bool
+        :param isPositive: True if positive message, False otherwise
+        :type isPositive: bool
         :rtype: str
         """
-        self.isGood = isGood
+        self.isPositive = isPositive
         self.fileLine = fileLine
         self.wordsCount = {}
 
@@ -76,7 +76,6 @@ class DataSet:
         :type dataSetPath: str
         :return: object
         """
-        self.data = []
         self.dataPositive = []
         self.dataNegative = []
         self.dataPath = dataSetPath
@@ -96,26 +95,32 @@ class DataSet:
             # print(subDirectoryList)
 
             if directoryPath in [self.positivePath, self.negativePath]:
-                isGood = True if directoryPath == self.positivePath else False
+                isPositive = True if directoryPath == self.positivePath else False
 
                 random.shuffle(fileNameList)
-                maxIndex = len(fileNameList)
+
                 for index, fileName in enumerate(fileNameList):
                     # print(directoryPath + '/' + fileName)
                     fileContent = ''.join(open(directoryPath + '/' + fileName, 'r', encoding="utf-8").readlines())
-                    if isGood:
-                        self.dataPositive.append(DataFile(fileContent, isGood))
-                    else:
-                        self.dataNegative.append(DataFile(fileContent, isGood))
 
-                    
-
-                    self.data.append(DataFile(fileContent, isGood))
+                    self.dataPositive.append(DataFile(fileContent, isPositive)) if isPositive \
+                        else self.dataNegative.append(DataFile(fileContent, isPositive))
 
             for subDirectory in subDirectoryList:
                 self.load(path + "/" + subDirectory)
 
             break
+
+    def classify(self):
+
+        maxIndexPositive = 0.8 * self.dataPositive.count()
+        maxIndexNegative = 0.8 * self.dataNegative.count()
+
+        for data in (self.dataPositive[:maxIndexPositive] + self.dataNegative[:maxIndexNegative]):
+
+            pass
+
+
 
 #------------------------------------------------------------------------------#
 #                                                                              #
@@ -138,4 +143,4 @@ if __name__ == '__main__':
     random.seed()
 
     dataSet = DataSet("./data")
-    print(dataSet.data[1500])
+    print(dataSet.dataPositive[500])
