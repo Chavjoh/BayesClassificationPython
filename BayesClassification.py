@@ -1,4 +1,4 @@
-#!/usr/bin/python
+# !/usr/bin/python
 # coding: latin-1
 
 #------------------------------------------------------------------------------#
@@ -19,6 +19,7 @@
 #------------------------------------------------------------------------------#
 
 import sys
+from os import walk
 
 #------------------------------------------------------------------------------#
 #                                                                              #
@@ -26,6 +27,49 @@ import sys
 #                                                                              #
 #------------------------------------------------------------------------------#
 
+
+class DataFile:
+    """ Contains file analysis information """
+
+    def __init__(self, fileLine, isGood):
+        # print(fileLine)
+        print(isGood)
+
+
+class DataSet:
+    """ Contains all DataFile """
+
+    def __init__(self):
+        self.data = []
+        self.dataPath = "./data"
+        self.positivePath = self.dataPath + "/positive"
+        self.negativePath = self.dataPath + "/negative"
+
+        self.load(self.dataPath)
+
+    def load(self, path):
+
+        # print("Directory" + path)
+
+        for (directoryPath, subDirectoryList, fileNameList) in walk(path):
+
+            # Debug
+            # print(fileNameList)
+            # print(directoryPath)
+            # print(subDirectoryList)
+
+            if directoryPath in [self.positivePath, self.negativePath]:
+                isGood = True if directoryPath == self.positivePath else False
+
+                for fileName in fileNameList:
+                    print(directoryPath + '/' + fileName)
+                    fileContent = ''.join(open(directoryPath + '/' + fileName, 'r', encoding="utf-8").readlines())
+                    self.data.append(DataFile(fileContent, isGood))
+
+            for subDirectory in subDirectoryList:
+                self.load(path + "/" + subDirectory)
+
+            break
 
 #------------------------------------------------------------------------------#
 #                                                                              #
@@ -42,6 +86,8 @@ import sys
 
 # If this is the main module, run this
 if __name__ == '__main__':
-
     argsCount = len(sys.argv)
     argsIndex = 1
+
+    dataset = DataSet()
+
