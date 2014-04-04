@@ -29,11 +29,15 @@ from os import walk
 
 
 class DataFile:
+    
     """ Contains file analysis information """
     def __init__(self, fileLine, isGood):
         """
-
-        :rtype : object
+        :param fileLine: Data file content (=message) in one line
+        :type fileLine: str
+        :param isGood: True if positive message, False otherwise
+        :type isGood: bool
+        :rtype: str
         """
         self.isGood = isGood
         self.fileLine = fileLine
@@ -50,14 +54,14 @@ class DataFile:
         self.sumWords = sum(self.wordsCount.values())
 
     def __repr__(self):
-        print("input : "+self.fileLine)
+        information = "Input file : " + self.fileLine
 
-        for key, val in self.wordsCount.items():
-            print(str(key)+" "+str(val))
+        for key, value in self.wordsCount.items():
+            information += str(key) + " " + str(value)
 
-        print(str(self.sumWords))
+        information += "Word count : " + str(self.sumWords)
 
-        return ""
+        return information
 
 class DataSet:
     """ Contains all DataFile """
