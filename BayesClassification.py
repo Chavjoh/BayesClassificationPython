@@ -77,6 +77,8 @@ class DataSet:
         :return: object
         """
         self.data = []
+        self.dataPositive = []
+        self.dataNegative = []
         self.dataPath = dataSetPath
         self.positivePath = self.dataPath + "/positive"
         self.negativePath = self.dataPath + "/negative"
@@ -101,6 +103,13 @@ class DataSet:
                 for index, fileName in enumerate(fileNameList):
                     # print(directoryPath + '/' + fileName)
                     fileContent = ''.join(open(directoryPath + '/' + fileName, 'r', encoding="utf-8").readlines())
+                    if isGood:
+                        self.dataPositive.append(DataFile(fileContent, isGood))
+                    else:
+                        self.dataNegative.append(DataFile(fileContent, isGood))
+
+                    
+
                     self.data.append(DataFile(fileContent, isGood))
 
             for subDirectory in subDirectoryList:
