@@ -6,6 +6,8 @@ __pycache__/
 *.so
 
 # Distribution / packaging
+*.pptx
+*.docx
 .Python
 env/
 bin/

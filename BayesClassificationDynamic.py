@@ -19,6 +19,7 @@
 #------------------------------------------------------------------------------#
 
 import sys
+import os
 from os import walk
 import random
 
@@ -41,7 +42,7 @@ class DataFile:
         :type isPositive: bool
         :rtype: str
         """
-        self.isPositive = keys['isPositive']
+        self.classe = keys['classe']
         self.fileContent = keys['fileContent']
         self.words = []
         self.wordsCount = {}
@@ -97,6 +98,7 @@ class DataFile:
 
         return information
 
+
 class DataSet:
     """ Contains all DataFile """
 
@@ -110,76 +112,67 @@ class DataSet:
         """
         self.testSuccess = 0
 
-        self.dataPositive = []
-        self.dataNegative = []
+        self.datas = []
 
         self.isTagged = isTagged
 
         self.dataPath = dataSetPath
-        self.positivePath = self.dataPath + "/positive"
-        self.negativePath = self.dataPath + "/negative"
+        # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        # find all directories
+        self.wordsProbability = []  # array of dictionaries
 
-        self.wordsProbabilityPositive = {}
-        self.wordsProbabilityNegative = {}
+        self.dirs = [name for name in os.listdir(self.dataPath) if os.path.isdir(os.path.join(self.dataPath, name))]
+        if 'tagged' in self.dirs:
+            self.dirs.remove('tagged')
+
+        for i in range(len(self.dirs)):
+            self.dirs[i] = self.dataPath+"/"+self.dirs[i]
+            self.wordsProbability.append({})
+            self.datas.append([])
+        # print(self.dirs)
+        # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
         self.load(self.dataPath)
 
+    # load files content
     def load(self, path):
 
-        # print("Directory" + path)
-        for (directoryPath, subDirectoryList, fileNameList) in walk(path):
-
-            # Debug
-            # print(fileNameList)
-            # print(directoryPath)
-            # print(subDirectoryList)
-
-            if directoryPath in [self.positivePath, self.negativePath]:
-                isPositive = True if directoryPath == self.positivePath else False
-
+        # parcours chaque repertoire
+        #     chaque repertoire est une classe, donc plusieurs dataset
+        for directory in self.dirs:
+            classIndex = 0  # TODO should be integrated to the next for loop
+            for (directoryPath, subDirectoryList, fileNameList) in walk(directory):
                 random.shuffle(fileNameList)
 
-                for index, fileName in enumerate(fileNameList):
+                for index, fileName in enumerate(fileNameList):  # TODO index useless
                     # print(directoryPath + '/' + fileName)
                     fileContent = ''.join(open(directoryPath + '/' + fileName, 'r', encoding="utf-8").readlines())
 
-                    if isPositive:
-                        self.dataPositive.append(DataFile(
-                            fileContent=fileContent,
-                            isPositive=isPositive,
-                            isTagged=self.isTagged
-                        ))
-                    else:
-                        self.dataNegative.append(DataFile(
-                            fileContent=fileContent,
-                            isPositive=isPositive,
-                            isTagged=self.isTagged
-                        ))
+                    self.datas[classIndex].append(DataFile(
+                        fileContent=fileContent,
+                        classe=classIndex,
+                        isTagged=self.isTagged
+                    ))
 
-            for subDirectory in subDirectoryList:
-                self.load(path + "/" + subDirectory)
-
-            break
+                classIndex += 1
 
     def calculateProbability(self):
         """
         Calculate the probability for each word to be positive of negative
         :return: None
         """
-        maxIndexPositive = int(0.8 * len(self.dataPositive))
-        maxIndexNegative = int(0.8 * len(self.dataNegative))
+        maxIndex = []
+        for data in self.datas:
+            maxIndex.append(int(0.8 * len(data)))
 
         # 80% of data used for training
-        wordsAllPositive = self.reduceWordsCount(self.dataPositive[:maxIndexPositive])
-        wordsAllNegative = self.reduceWordsCount(self.dataNegative[:maxIndexNegative])
+        wordsAll = []
+        for index, data in enumerate(self.datas):
+            wordsAll.append(self.reduceWordsCount(data[:maxIndex[index]]))  # lol if its works
 
-        for word, number in wordsAllPositive.items():
-            self.wordsProbabilityPositive[word] = \
-                (wordsAllPositive[word] + 1) / (sum(wordsAllPositive.values()) + len(wordsAllPositive))
-
-        for word, number in wordsAllNegative.items():
-            self.wordsProbabilityNegative[word] = \
-                (wordsAllNegative[word] + 1) / (sum(wordsAllNegative.values()) + len(wordsAllNegative))
+        for index, blabla in enumerate(wordsAll):
+            for word, number in blabla.items():  # number useless
+                self.wordsProbability[index][word] = (blabla[word] + 1) / (sum(blabla.values()) + len(blabla))
 
     @staticmethod
     def reduceWordsCount(dataList):
@@ -217,25 +210,26 @@ class DataSet:
 
         :return: None
         """
-        maxIndexPositive = int(0.8 * len(self.dataPositive))
-        maxIndexNegative = int(0.8 * len(self.dataNegative))
 
-        for data in self.dataPositive[maxIndexPositive:]:
-            # If positive
-            if self.classify(data):
-                self.testSuccess += 1
+        maxIndex = []
+        for data in self.datas:
+            maxIndex.append(int(0.8 * len(data)))
 
-        for data in self.dataNegative[maxIndexNegative:]:
-            # If negative
-            if not self.classify(data):
-                self.testSuccess += 1
+        for index, datas in enumerate(self.datas):
+            for data2 in datas:
+                if self.classify(data2) == index:  # TODO FUCKED UP
+                    self.testSuccess += 1
 
     def evaluate(self):
         """
         Accuracy calculation to evaluate training algorithm
         :return: float
         """
-        accuracy = self.testSuccess / (len(self.dataPositive) + len(self.negativePath))
+        somme = 0
+        for data in self.datas:
+            somme += len(data)
+
+        accuracy = self.testSuccess / somme
 
         return accuracy
 
@@ -249,25 +243,18 @@ class DataSet:
         """
 
         # Initialization
-        probabilityPositive = 1
-        probabilityNegative = 1
+        probability = []
+        for data in self.datas:
+            probability.append(1)
 
-        for word, probability in self.wordsProbabilityPositive.items():
-            try:
-                probabilityPositive *= pow(probability, dataFile.wordsCount[word])
-            except KeyError:
-                pass
+        for index, wordsProbability in enumerate(self.wordsProbability):
+            for word, probability2 in wordsProbability.items():
+                try:
+                    probability[index] *= pow(probability2, dataFile.wordsCount[word])
+                except KeyError:
+                    pass
 
-        for word, probability in self.wordsProbabilityNegative.items():
-            try:
-                probabilityNegative *= pow(probability, dataFile.wordsCount[word])
-            except KeyError:
-                pass
-
-        if (probabilityPositive > probabilityNegative):
-            return True
-        else:
-            return False
+        return max(probability)
 
 #------------------------------------------------------------------------------#
 #                                                                              #
