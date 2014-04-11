@@ -27,6 +27,7 @@ import random
 #                                   CLASSES                                    #
 #                                                                              #
 #------------------------------------------------------------------------------#
+from pip._vendor.distlib.util import in_venv
 
 
 class DataFile:
@@ -85,6 +86,9 @@ class DataFile:
             except KeyError:
                 self.wordsCount[word] = 1
 
+        # print("+"+str(self.wordsCount))
+        # print("+"+self.className+" "+str(self.words))
+
     def __repr__(self):
         information = "Input file : " + self.fileContent + "\n"
         information += "============" + "\n"
@@ -124,10 +128,18 @@ class DataSet:
         # self.negativePath = self.dataPath + "/negative"
 
         self.wordsProbability = {}
+        self.allWordList = []
         # self.wordsProbabilityPositive = {}
         # self.wordsProbabilityNegative = {}
 
+        self.debug = True
         self.load(self.dataPath)
+
+        self.inventoryWord()
+
+        if self.debug:
+            for className in self.classes:
+                print(str(className)+" "+str(len(self.data[className])))
 
     def load(self, path):
 
@@ -144,7 +156,7 @@ class DataSet:
             directorySplit = directoryPath.split("/")[-1]
             if directorySplit in self.classes:
 
-                random.shuffle(fileNameList)
+                # random.shuffle(fileNameList)
 
                 for index, fileName in enumerate(fileNameList):
                     # print(directoryPath + '/' + fileName)
@@ -155,6 +167,7 @@ class DataSet:
                         className=directorySplit,
                         isTagged=self.isTagged
                     )
+
                     try:
                         self.data[directorySplit].append(currentDataFile)
                     except:
@@ -177,13 +190,16 @@ class DataSet:
 
             # 80% of data used for training
             wordsAll = self.reduceWordsCount(self.data[className][:maxIndex])
+            print("- "+className+" "+str(wordsAll))
 
             for word, number in wordsAll.items():
                 self.wordsProbability[className][word] = \
                     (wordsAll[word] + 1) / (sum(wordsAll.values()) + len(wordsAll))
 
-    @staticmethod
-    def reduceWordsCount(dataList):
+            if self.debug:
+                print(className + " " + str(self.wordsProbability[className]))
+
+    def reduceWordsCount(self, dataList):
         """
         Reduce the count of all words to one dictionary
         :param dataList: DataFile list to reduce
@@ -191,14 +207,12 @@ class DataSet:
         :return: None
         """
 
-        wordsAll = {}
+        wordsAll = self.inventoryWord()
 
         for data in dataList:
+            print("+"+str(data.wordsCount))
             for word, value in data.wordsCount.items():
-                try:
-                    wordsAll[word] += value
-                except KeyError:
-                    wordsAll[word] = value
+                wordsAll[word] += value
 
         return wordsAll
 
@@ -265,6 +279,16 @@ class DataSet:
 
         return maxClass
 
+    def inventoryWord(self):
+        # TODO optimization
+        dict = {}
+        for className,data in self.data.items():
+            for dataFile in data:
+                for word in dataFile.wordsCount.keys():
+                    dict[word] = 0
+
+        return dict
+
 #------------------------------------------------------------------------------#
 #                                                                              #
 #                             UTILITIES FUNCTIONS                              #
@@ -288,7 +312,7 @@ if __name__ == '__main__':
     #
     # NORMAL DATA SET
     #
-    dataSet = DataSet("./data", False)
+    dataSet = DataSet("./data/normal", False)
     # print(dataSet.dataPositive[500])
     dataSet.train()
     dataSet.test()
@@ -297,8 +321,8 @@ if __name__ == '__main__':
     #
     # TAGGED DATA SET
     #
-    dataSetTagged = DataSet("./data/tagged/tagged", True)
-    # print(dataSetTagged.dataPositive[500])
-    dataSetTagged.train()
-    dataSetTagged.test()
-    print("Evaluation accuracy (tagged) : " + str(dataSetTagged.evaluate()))
+    # dataSetTagged = DataSet("./data/tagged", True)
+    # # print(dataSetTagged.dataPositive[500])
+    # dataSetTagged.train()
+    # dataSetTagged.test()
+    # print("Evaluation accuracy (tagged) : " + str(dataSetTagged.evaluate()))
