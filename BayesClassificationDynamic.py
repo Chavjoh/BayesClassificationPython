@@ -243,18 +243,18 @@ class DataSet:
         """
 
         # Initialization
-        probability = []
+        probabilities = []
         for data in self.datas:
-            probability.append(1)
+            probabilities.append(1)
 
         for index, wordsProbability in enumerate(self.wordsProbability):
-            for word, probability2 in wordsProbability.items():
+            for word, probability in wordsProbability.items():
                 try:
-                    probability[index] *= pow(probability2, dataFile.wordsCount[word])
+                    probabilities[index] *= pow(probability, dataFile.wordsCount[word])
                 except KeyError:
                     pass
 
-        return max(probability)
+        return max(probabilities)
 
 #------------------------------------------------------------------------------#
 #                                                                              #
