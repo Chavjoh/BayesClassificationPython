@@ -21,6 +21,8 @@
 import sys
 from os import walk
 import random
+import math
+import codecs
 
 #------------------------------------------------------------------------------#
 #                                                                              #
@@ -44,6 +46,7 @@ class DataFile:
         """
         self.className = keys['className']
         self.fileContent = keys['fileContent']
+        self.exceptionWords = keys['wordException']
         self.words = []
         self.wordsCount = {}
 
@@ -51,6 +54,8 @@ class DataFile:
             self.loadTagged()
         else:
             self.load()
+
+        self.removeExceptionWords()
 
         self.calculateWordsCount()
         self.wordsSum = sum(self.wordsCount.values())
@@ -72,6 +77,17 @@ class DataFile:
             try:
                 self.words.append(line.split("\t")[2])
             except IndexError:
+                pass
+
+    def removeExceptionWords(self):
+        exception = []
+        with codecs.open(self.exceptionWords, 'r', 'UTF-8') as file:
+            exception = file.read().split("\r\n")
+
+        for x in exception:
+            try:
+                self.words.remove(x)
+            except ValueError:
                 pass
 
     def calculateWordsCount(self):
@@ -132,7 +148,7 @@ class DataSet:
         # self.wordsProbabilityPositive = {}
         # self.wordsProbabilityNegative = {}
 
-        self.debug = True
+        self.debug = False
         self.load(self.dataPath)
 
         self.inventoryWord()
@@ -156,7 +172,8 @@ class DataSet:
             directorySplit = directoryPath.split("/")[-1]
             if directorySplit in self.classes:
 
-                # random.shuffle(fileNameList)
+                if not self.debug:
+                    random.shuffle(fileNameList)
 
                 for index, fileName in enumerate(fileNameList):
                     # print(directoryPath + '/' + fileName)
@@ -165,7 +182,8 @@ class DataSet:
                     currentDataFile = DataFile(
                         fileContent=fileContent,
                         className=directorySplit,
-                        isTagged=self.isTagged
+                        isTagged=self.isTagged,
+                        wordException=directoryPath+"/../uselessWords.txt"
                     )
 
                     try:
@@ -190,7 +208,8 @@ class DataSet:
 
             # 80% of data used for training
             wordsAll = self.reduceWordsCount(self.data[className][:maxIndex])
-            print("- "+className+" "+str(wordsAll))
+            if self.debug:
+                print("- "+className+" "+str(wordsAll))
 
             for word, number in wordsAll.items():
                 self.wordsProbability[className][word] = \
@@ -210,7 +229,7 @@ class DataSet:
         wordsAll = self.inventoryWord()
 
         for data in dataList:
-            print("+"+str(data.wordsCount))
+            # print("+"+str(data.wordsCount))
             for word, value in data.wordsCount.items():
                 wordsAll[word] += value
 
@@ -236,12 +255,11 @@ class DataSet:
         for className in self.classes:
             maxIndex = int(0.8 * len(self.data[className]))
 
+            self.testSuccess[className] = 0
+
             for data in self.data[className][maxIndex:]:
                 if self.classify(data) == className:
-                    try:
-                        self.testSuccess[className] += 1
-                    except KeyError:
-                        self.testSuccess[className] = 1
+                    self.testSuccess[className] += 1
 
     def evaluate(self):
         """
@@ -249,7 +267,8 @@ class DataSet:
         :return: float
         """
         # accuracy = self.testSuccess / (len(self.dataPositive) + len(self.negativePath))
-        accuracy = sum(self.testSuccess.values())/sum(len(v) for v in self.data.values())
+        accuracy = sum(self.testSuccess.values())/math.ceil(0.2*sum(len(v) for v in self.data.values()))
+
         return accuracy
 
     def classify(self, dataFile):
@@ -312,7 +331,7 @@ if __name__ == '__main__':
     #
     # NORMAL DATA SET
     #
-    dataSet = DataSet("./data/normal", False)
+    dataSet = DataSet("./dataFull/normal", False)
     # print(dataSet.dataPositive[500])
     dataSet.train()
     dataSet.test()
@@ -321,8 +340,8 @@ if __name__ == '__main__':
     #
     # TAGGED DATA SET
     #
-    # dataSetTagged = DataSet("./data/tagged", True)
-    # # print(dataSetTagged.dataPositive[500])
-    # dataSetTagged.train()
-    # dataSetTagged.test()
-    # print("Evaluation accuracy (tagged) : " + str(dataSetTagged.evaluate()))
+    dataSetTagged = DataSet("./dataFull/tagged", True)
+    # print(dataSetTagged.dataPositive[500])
+    dataSetTagged.train()
+    dataSetTagged.test()
+    print("Evaluation accuracy (tagged) : " + str(dataSetTagged.evaluate()))
