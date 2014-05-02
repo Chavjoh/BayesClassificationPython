@@ -23,6 +23,7 @@ from os import walk
 import random
 import math
 import codecs
+from collections import defaultdict
 
 #------------------------------------------------------------------------------#
 #                                                                              #
@@ -36,27 +37,38 @@ class DataFile:
 	def __init__(self, **keys):
 		"""
 		Create a new DataFile
-		:param fileContent: Data file content (=message)
-		:type fileContent: str
-		:param isPositive: True if positive message, False otherwise
-		:type isPositive: bool
 		:rtype: str
 		"""
+		# Class name (positive / negative)
 		self.className = keys['className']
+
+		# Content of the DataFile (text)
 		self.fileContent = keys['fileContent']
+
+		# Path of files that contains all exception words
 		self.exceptionWords = keys['wordException']
+
+		# List that contains all words
 		self.words = []
+
+		# Dictionary that contains apparition number of each word
 		self.wordsCount = {}
 
+		# Loading tagged or normal content
 		if keys['isTagged']:
 			self.loadTagged()
 		else:
 			self.load()
 
+		# Remove useless words in text
 		self.removeExceptionWords()
 
+		# Clean useless variable in memory (no needed any more)
+		self.fileContent = ""
+		self.exceptionWords = []
+
+		# Count each words
 		self.calculateWordsCount()
-		self.wordsSum = sum(self.wordsCount.values())
 
 	def load(self):
 		"""
@@ -104,14 +116,13 @@ class DataFile:
 		# print("+"+self.className+" "+str(self.words))
 
 	def __repr__(self):
-		information = "Input file : " + self.fileContent + "\n"
-		information += "============" + "\n"
+		information = "============" + "\n"
 
 		for key, value in self.wordsCount.items():
 			information += str(key) + " " + str(value) + "\n"
 
 		information += "============" + "\n"
-		information += "Word count : " + str(self.wordsSum) + "\n"
+		information += "Word count : " + str(len(self.words)) + "\n"
 
 		return information
 
@@ -142,6 +153,8 @@ class DataSet:
 
 		self.wordsProbability = {}
 		self.allWordList = []
+
+		self.invetory = {}
 		
 		self.debug = False
 		self.load(self.dataPath)
@@ -186,6 +199,9 @@ class DataSet:
 					except:
 						self.data[directorySplit] = [currentDataFile]
 
+					for word in currentDataFile.words:
+						self.invetory[word] = 0
+
 			for subDirectory in subDirectoryList:
 				self.load(path + "/" + subDirectory)
 
@@ -219,7 +235,7 @@ class DataSet:
 		
 		self.train(dataTrain)
 		self.test(dataTest)
-		return self.evaluate()
+		return self.evaluate(0.2)
 
 	def crossValidation(self):
 
@@ -248,7 +264,7 @@ class DataSet:
 			# print("Total : " + str(len(dataTrain)))
 			self.train(dataTrain)
 			self.test(dataTest)
-			result += self.evaluate() / n
+			result += self.evaluate(0.2) / n
 			
 		return result
 
@@ -290,13 +306,16 @@ class DataSet:
 				if self.classify(dataEntry) == className:
 					self.testSuccess[className] += 1
 
-	def evaluate(self):
+	def evaluate(self, percentForTest):
 		"""
 		Accuracy calculation to evaluate training algorithm
+
+		:param percentForTest: Percent of the test in dataset
+		:type percentForTest: float
 		:return: float
 		"""
 		# accuracy = self.testSuccess / (len(self.dataPositive) + len(self.negativePath))
-		accuracy = sum(self.testSuccess.values())/math.ceil(0.2*sum(len(v) for v in self.data.values()))
+		accuracy = sum(self.testSuccess.values())/math.ceil(percentForTest*sum(len(v) for v in self.data.values()))
 
 		return accuracy
 
@@ -329,13 +348,13 @@ class DataSet:
 
 	def inventoryWord(self):
 		# TODO optimization
-		dict = {}
-		for className,data in self.data.items():
-			for dataFile in data:
-				for word in dataFile.wordsCount.keys():
-					dict[word] = 0
+		# dict = {}
+		# for className,data in self.data.items():
+		# 	for dataFile in data:
+		# 		for word in dataFile.wordsCount.keys():
+		# 			dict[word] = 0
 
-		return dict
+		return dict.fromkeys(self.invetory,0)
 
 #------------------------------------------------------------------------------#
 #                                                                              #
@@ -353,6 +372,7 @@ if __name__ == '__main__':
 	#
 	# NORMAL DATA SET
 	#
+	print("Loading normal dataset ...")
 	dataSet = DataSet("./dataFull/normal", False)
 	
 	print("Evaluation accuracy (normal) - Division : ")
@@ -363,6 +383,7 @@ if __name__ == '__main__':
 	#
 	# TAGGED DATA SET
 	#
+	print("Loading tagged dataset ...")
 	dataSetTagged = DataSet("./dataFull/tagged", True)
 	
 	print("Evaluation accuracy (tagged) - Division : ")
