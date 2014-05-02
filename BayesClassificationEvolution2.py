@@ -24,6 +24,8 @@ import random
 import math
 import codecs
 from collections import defaultdict
+import re
+import string
 
 #------------------------------------------------------------------------------#
 #                                                                              #
@@ -43,7 +45,7 @@ class DataFile:
 		self.className = keys['className']
 
 		# Content of the DataFile (text)
-		self.fileContent = keys['fileContent']
+		self.fileContent = keys['fileContent'].lower()
 
 		# Path of files that contains all exception words
 		self.exceptionWords = keys['wordException']
@@ -53,6 +55,9 @@ class DataFile:
 
 		# Dictionary that contains apparition number of each word
 		self.wordsCount = defaultdict(int)
+		
+		# Remove punctuation from file content
+		self.removePunctuation()
 
 		# Loading tagged or normal content
 		if keys['isTagged']:
@@ -99,6 +104,10 @@ class DataFile:
 				self.words.remove(x)
 			except ValueError:
 				pass
+	
+	def removePunctuation(self):
+		regex = re.compile('[%s]' % re.escape(string.punctuation))
+		self.fileContent = regex.sub('', self.fileContent)
 
 	def calculateWordsCount(self):
 		"""
@@ -268,7 +277,10 @@ class DataSet:
 
 		:return: None
 		"""
-		print("train")
+		
+		if self.debug:
+			print("Training ...")
+		
 		for className in self.classes:
 			self.wordsProbability[className] = {}
 			
@@ -292,7 +304,10 @@ class DataSet:
 		
 		:return: None
 		"""
-		print("test")
+		
+		if self.debug:
+			print("Testing ...")
+		
 		for className in self.classes:
 			self.testSuccess[className] = 0
 
@@ -308,8 +323,9 @@ class DataSet:
 		:type percentForTest: float
 		:return: float
 		"""
-		print("evaluate")
-		# accuracy = self.testSuccess / (len(self.dataPositive) + len(self.negativePath))
+		if self.debug:
+			print("Evaluating ...")
+		
 		accuracy = sum(self.testSuccess.values())/math.ceil(percentForTest*sum(len(v) for v in self.data.values()))
 
 		return accuracy
@@ -322,8 +338,7 @@ class DataSet:
 		:type dataFile: DataFile
 		:return: True if positive, False otherwise
 		"""
-
-		# Initialization
+		
 		probability = {}
 		maxClass = None
 
@@ -340,13 +355,6 @@ class DataSet:
 		return maxClass
 
 	def inventoryWord(self):
-		# TODO optimization
-		# dict = {}
-		# for className,data in self.data.items():
-		# 	for dataFile in data:
-		# 		for word in dataFile.wordsCount.keys():
-		# 			dict[word] = 0
-
 		return dict.fromkeys(self.invetory,0)
 
 #------------------------------------------------------------------------------#
