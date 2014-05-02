@@ -40,28 +40,39 @@ class DataFile:
 	def __init__(self, **keys):
 		"""
 		Create a new DataFile
-		:param fileContent: Data file content (=message)
-		:type fileContent: str
-		:param isPositive: True if positive message, False otherwise
-		:type isPositive: bool
 		:rtype: str
 		"""
+		# Class name (positive / negative)
 		self.className = keys['className']
+		
+		# Content of the DataFile (text)
 		self.fileContent = keys['fileContent']
+		
+		# Path of files that contains all exception words
 		self.exceptionWords = keys['wordException']
+		
+		# List that contains all words
 		self.words = []
+		
+		# Dictionary that contains apparition number of each word
 		self.wordsCount = {}
 
+		# Loading tagged or normal content
 		if keys['isTagged']:
 			self.loadTagged()
 		else:
 			self.load()
 
+		# Remove useless words in text
 		self.removeExceptionWords()
+		
+		# Clean useless variable in memory (no needed any more)
+		self.fileContent = ""
+		self.exceptionWords = []
 
+		# Count each words
 		self.calculateWordsCount()
-		self.wordsSum = sum(self.wordsCount.values())
-
+		
 	def load(self):
 		"""
 		Load words from fileContent for file that contains only message
@@ -82,6 +93,10 @@ class DataFile:
 				pass
 
 	def removeExceptionWords(self):
+		"""
+		Calculate the number of occurrence of words.
+		:return: None
+		"""
 		try:
 			exception = []
 			with codecs.open(self.exceptionWords, 'r', 'UTF-8') as file:
@@ -111,14 +126,13 @@ class DataFile:
 		# print("+"+self.className+" "+str(self.words))
 
 	def __repr__(self):
-		information = "Input file : " + self.fileContent + "\n"
 		information += "============" + "\n"
 
 		for key, value in self.wordsCount.items():
 			information += str(key) + " " + str(value) + "\n"
 
 		information += "============" + "\n"
-		information += "Word count : " + str(self.wordsSum) + "\n"
+		information += "Word count : " + str(len(self.words)) + "\n"
 
 		return information
 
@@ -204,7 +218,7 @@ class DataSet:
 
 			break
 
-		# print("end load "+str(time.time()-temps))
+		print("end load "+str(time.time()-temps))
 
 	def reduceWordsCount(self, dataList):
 		"""
@@ -221,7 +235,7 @@ class DataSet:
 			for word, value in data.wordsCount.items():
 				wordsAll[word] += value
 
-		# print("end reduceWords "+str(time.time()-temps))
+		print("end reduceWords "+str(time.time()-temps))
 		return wordsAll
 
 	def division(self):
@@ -235,8 +249,8 @@ class DataSet:
 
 		self.train(dataTrain)
 		self.test(dataTest)
-		# print("end divisions "+str(time.time()-temps))
-		return self.evaluate()
+		print("end divisions "+str(time.time()-temps))
+		return self.evaluate(0.2)
 
 	def crossValidation(self):
 
@@ -254,8 +268,10 @@ class DataSet:
 				dataTest[self.classes[j]] = []
 				# print("Class total : " + str(total))
 				if i > 0:
+					# dataTrain[self.classes[j]].extend(self.data[self.classes[j]][0: round(i* (total / n))])
 					dataTrain[self.classes[j]] += self.data[self.classes[j]][0: round(i* (total / n))]
 				if i < (n-1):
+					# dataTrain[self.classes[j]].extend(self.data[self.classes[j]][round((i + 1) * (total / n)) : total])
 					dataTrain[self.classes[j]] += self.data[self.classes[j]][round((i + 1) * (total / n)) : total]
 
 				dataTest[self.classes[j]] += self.data[self.classes[j]][round(i * (total / n)): round((i + 1) * (total / n))]
@@ -265,9 +281,9 @@ class DataSet:
 			# print("Total : " + str(len(dataTrain)))
 			self.train(dataTrain)
 			self.test(dataTest)
-			result += self.evaluate() / n
+			result += self.evaluate(0.2) / n
 
-		# print("end crossvalidation "+str(time.time()-temps))
+		print("end crossvalidation "+str(time.time()-temps))
 		return result
 
 	def train(self, data):
@@ -285,14 +301,16 @@ class DataSet:
 			if self.debug:
 				print("- " + className + " " + str(wordsAll))
 
+			print("train")
 			factor = sum(wordsAll.values()) + len(wordsAll)
 			for word in wordsAll.keys():
 				self.wordsProbability[className][word] = (wordsAll[word] + 1) / factor
+			print("train2")
 
 			if self.debug:
 				print(className + " " + str(self.wordsProbability[className]))
 
-		# print("end train "+str(time.time()-temps))
+		print("end train "+str(time.time()-temps))
 
 	def test(self, data):
 		"""
@@ -309,15 +327,18 @@ class DataSet:
 				if self.classify(dataEntry) == className:
 					self.testSuccess[className] += 1
 
-	def evaluate(self):
+	def evaluate(self, percentForTest):
 		"""
 		Accuracy calculation to evaluate training algorithm
+		
+		:param percentForTest: Percent of the test in dataset
+		:type percentForTest: float
 		:return: float
 		"""
 		# accuracy = self.testSuccess / (len(self.dataPositive) + len(self.negativePath))
-		accuracy = sum(self.testSuccess.values())/math.ceil(0.2*sum(len(v) for v in self.data.values()))
+		accuracy = sum(self.testSuccess.values())/math.ceil(percentForTest*sum(len(v) for v in self.data.values()))
 
-		# print("end evaluate "+str(time.time()-temps))
+		print("end evaluate "+str(time.time()-temps))
 		return accuracy
 
 	def classify(self, dataFile):
@@ -354,10 +375,10 @@ class DataSet:
 		return self.inventory
 
 		# for data in self.data.values():
-		#     for dataFile in data:
-		#         # inventory = dict.fromkeys(list(dataFile.wordsCount.keys())+list(inventory.keys()),0)
-		#         for word in dataFile.wordsCount.keys():
-		#             self.inventory[word] = 0
+		#	 for dataFile in data:
+		#		 # inventory = dict.fromkeys(list(dataFile.wordsCount.keys())+list(inventory.keys()),0)
+		#		 for word in dataFile.wordsCount.keys():
+		#			 self.inventory[word] = 0
 		#
 		# print("end inventoryWord "+str(time.time()-temps))
 		# return inventory
@@ -379,6 +400,7 @@ if __name__ == '__main__':
 	#
 	# NORMAL DATA SET
 	#
+	print("Loading normal dataset ...")
 	dataSet = DataSet("./dataFull/normal", False, True)
 
 	print("Evaluation accuracy (normal) - Division : ")
@@ -386,9 +408,10 @@ if __name__ == '__main__':
 	print("Evaluation accuracy (normal) - CrossValidation : ")
 	print("Accuracy -> " + str(dataSet.crossValidation()))
 
-
+	#
 	# TAGGED DATA SET
-
+	#
+	print("Loading tagged dataset ...")
 	dataSetTagged = DataSet("./dataFull/tagged", True, True)
 
 	print("Evaluation accuracy (tagged) - Division : ")
