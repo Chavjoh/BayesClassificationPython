@@ -313,11 +313,11 @@ class DataSet:
 				dataTest[self.classes[j]] = []
 				
 				if i > 0:
-					dataTrain[self.classes[j]].extend(self.data[self.classes[j]][0 : round(i* (total / n))])
+					dataTrain[self.classes[j]] += self.data[self.classes[j]][0 : round(i* (total / n))]
 				if i < (n-1):
-					dataTrain[self.classes[j]].extend(self.data[self.classes[j]][round((i + 1) * (total / n)) : total])
+					dataTrain[self.classes[j]] += self.data[self.classes[j]][round((i + 1) * (total / n)) : total]
 				
-				dataTest[self.classes[j]].extend(self.data[self.classes[j]][round(i * (total / n)) : round((i + 1) * (total / n))])
+				dataTest[self.classes[j]] += self.data[self.classes[j]][round(i * (total / n)) : round((i + 1) * (total / n))]
 				
 				if self.debug:
 					print("Class " + str(j) + " -> " +  str(len(dataTrain[self.classes[j]])))
