@@ -38,7 +38,8 @@ class DataFile:
 
 	def __init__(self, **keys):
 		"""
-		Create a new DataFile
+		Create a new DataFile.
+		
 		:rtype: str
 		"""
 		# Class name (positive / negative)
@@ -77,7 +78,8 @@ class DataFile:
 
 	def load(self):
 		"""
-		Load words from fileContent for file that contains only message
+		Load words from fileContent for file that contains only message.
+		
 		:return: None
 		"""
 
@@ -85,7 +87,8 @@ class DataFile:
 
 	def loadTagged(self):
 		"""
-		Load words from fileContent for file that contains more information with message
+		Load words from fileContent for file that contains more information with message.
+		
 		:return: None
 		"""
 		for line in self.fileContent.split("\n"):
@@ -95,6 +98,11 @@ class DataFile:
 				pass
 
 	def removeExceptionWords(self):
+		"""
+		Remove all words in exception list from file content.
+		
+		:return: None
+		"""
 		exception = []
 		with codecs.open(self.exceptionWords, 'r', 'UTF-8') as file:
 			exception = file.read().split("\r\n")
@@ -106,22 +114,30 @@ class DataFile:
 				pass
 	
 	def removePunctuation(self):
+		"""
+		Remove punctuation from file content.
+		
+		:return: None
+		"""
 		regex = re.compile('[%s]' % re.escape(string.punctuation))
 		self.fileContent = regex.sub('', self.fileContent)
 
 	def calculateWordsCount(self):
 		"""
 		Calculate the number of occurrence of words.
+		
 		:return: None
 		"""
 
 		for word in self.words:
 			self.wordsCount[word] += 1
 
-		# print("+"+str(self.wordsCount))
-		# print("+"+self.className+" "+str(self.words))
-
 	def __repr__(self):
+		"""
+		String representation of the DataFile.
+		
+		:return: str
+		"""
 		information = "============" + "\n"
 
 		for key, value in self.wordsCount.items():
@@ -136,32 +152,49 @@ class DataFile:
 class DataSet:
 	""" Contains all DataFile """
 
-	def __init__(self, dataSetPath, isTagged):
+	def __init__(self, dataSetPath, isTagged, random):
 		"""
+		Create a new Dataset
+		
 		:param dataSetPath: Path to data set folder that contains positive and negative folder messages.
 		:type dataSetPath: str
 		:param isTagged: Indicate if dataSet is tagged (Different file structure)
 		:type isTagged: bool
+		:param random: Indicate if dataset is randomized when loading
+		:type ramdom: bool
 		:return: object
 		"""
+		
+		# Add slash to dataset path if necessary
 		if dataSetPath[-1] != "/":
 			dataSetPath += "/"
-
-		# Classes are directories names
-		self.classes = ['positive', 'negative']
-		self.data = {}
-
-		self.testSuccess = {}
-
-		self.isTagged = isTagged
-
 		self.dataPath = dataSetPath
 
+		# Classes (used for directories names)
+		self.classes = ['positive', 'negative']
+		
+		# Contains all dataFile for each class
+		self.data = {}
+
+		# Contains the number of test passed with success
+		self.testSuccess = {}
+
+		# Indicates if we load tagged file
+		self.isTagged = isTagged
+		
+		# Indicates if the dataset have to be loaded randomly
+		self.random = random
+
+		# Probability of apparition of each word for each class
 		self.wordsProbability = {}
 
-		self.invetory = {}
+		# Inventory of each words of all DataFile
+		self.inventory = {}
 		
+		# Indicates if debug mode is activate (to display more information during execution)
 		self.debug = False
+		
+		# Load dataset
 		self.load(self.dataPath)
 		
 		if self.debug:
@@ -169,41 +202,54 @@ class DataSet:
 				print(str(className)+" "+str(len(self.data[className])))
 
 	def load(self, path):
-
+		"""
+		Load all dataset.
+		
+		:param path: Path to dataset to load
+		:type path: str
+		:return: None
+		"""
+		# Remove last slash if necessary
 		if path[-1] == "/":
 			path = path[0:-1]
 
-		# print("Directory" + path)
 		for (directoryPath, subDirectoryList, fileNameList) in walk(path):
 
 			# Debug
 			# print(fileNameList)
 			# print(directoryPath)
 			# print(subDirectoryList)
+			
+			# directorySplit = Class name
 			directorySplit = directoryPath.split("/")[-1]
+			
 			if directorySplit in self.classes:
 
-				if not self.debug:
+				if self.random:
 					random.shuffle(fileNameList)
 
 				for index, fileName in enumerate(fileNameList):
-					# print(directoryPath + '/' + fileName)
+				
+					# Read all line of the file
 					fileContent = ''.join(open(directoryPath + '/' + fileName, 'r', encoding="utf-8").readlines())
 
+					# Create a DataFile and parse fileContent
 					currentDataFile = DataFile(
 						fileContent=fileContent,
 						className=directorySplit,
 						isTagged=self.isTagged,
 						wordException=directoryPath+"/../uselessWords.txt"
 					)
-
+					
+					# Add DataFile to list
 					try:
 						self.data[directorySplit].append(currentDataFile)
 					except:
 						self.data[directorySplit] = [currentDataFile]
 
+					# Add all words in inventory
 					for word in currentDataFile.words:
-						self.invetory[word] = 0
+						self.inventory[word] = 0
 
 			for subDirectory in subDirectoryList:
 				self.load(path + "/" + subDirectory)
@@ -212,7 +258,8 @@ class DataSet:
 
 	def reduceWordsCount(self, dataList):
 		"""
-		Reduce the count of all words to one dictionary
+		Reduce the count of all words to one dictionary.
+		
 		:param dataList: DataFile list to reduce
 		:type dataList: list of dataFile
 		:return: None
@@ -221,13 +268,17 @@ class DataSet:
 		wordsAll = self.inventoryWord()
 
 		for data in dataList:
-			# print("+"+str(data.wordsCount))
 			for word, value in data.wordsCount.items():
 				wordsAll[word] += value
 
 		return wordsAll
 
 	def division(self):
+		"""
+		Execute division algorithm (80% training, 20% testing).
+		
+		:return: None
+		"""
 		dataTrain = {}
 		dataTest = {}
 		
@@ -241,20 +292,26 @@ class DataSet:
 		return self.evaluate(0.2)
 
 	def crossValidation(self):
-
+		"""
+		Execute cross validation algorithm (window of 20% testing moving along 5 parts).
+		
+		:return: None
+		"""
 		result = 0
 		n = 5
 		
+		# For each part
 		for i in range(0, n):
 			
 			dataTrain = {}
 			dataTest = {}
 			
+			# For each class
 			for j in range(0, len(self.classes)):
 				total = len(self.data[self.classes[j]])
 				dataTrain[self.classes[j]] = []
 				dataTest[self.classes[j]] = []
-				# print("Class total : " + str(total))
+				
 				if i > 0:
 					dataTrain[self.classes[j]].extend(self.data[self.classes[j]][0 : round(i* (total / n))])
 				if i < (n-1):
@@ -262,9 +319,12 @@ class DataSet:
 				
 				dataTest[self.classes[j]].extend(self.data[self.classes[j]][round(i * (total / n)) : round((i + 1) * (total / n))])
 				
-				# print("Class " + str(j) + " -> " +  str(len(dataTrain[self.classes[j]])))
+				if self.debug:
+					print("Class " + str(j) + " -> " +  str(len(dataTrain[self.classes[j]])))
 			
-			# print("Total : " + str(len(dataTrain)))
+			if self.debug:
+				print("Total : " + str(len(dataTrain)))
+			
 			self.train(dataTrain)
 			self.test(dataTest)
 			result += self.evaluate(0.2) / n
@@ -273,8 +333,10 @@ class DataSet:
 
 	def train(self, data):
 		"""
-		Training for Bayes algorithm
-
+		Training for Bayes algorithm.
+		
+		:param data: Data to use for training
+		:type data: list
 		:return: None
 		"""
 		
@@ -298,10 +360,11 @@ class DataSet:
 
 	def test(self, data):
 		"""
-		Testing results from bayes algorithm
-		Save number of correct values
-		Calculate the probability for each word to be positive of negative
+		Testing results from bayes algorithm. Save number of correct values.
+		Calculate the probability for each word to be positive of negative.
 		
+		:param data: Data to use for testing
+		:type data: list
 		:return: None
 		"""
 		
@@ -317,7 +380,7 @@ class DataSet:
 
 	def evaluate(self, percentForTest):
 		"""
-		Accuracy calculation to evaluate training algorithm
+		Accuracy calculation to evaluate training algorithm.
 
 		:param percentForTest: Percent of the test in dataset
 		:type percentForTest: float
@@ -332,7 +395,7 @@ class DataSet:
 
 	def classify(self, dataFile):
 		"""
-		Classify a dataFile to positive or negative
+		Classify a dataFile to positive or negative.
 
 		:param dataFile: DataFile to classify
 		:type dataFile: DataFile
@@ -355,7 +418,12 @@ class DataSet:
 		return maxClass
 
 	def inventoryWord(self):
-		return dict.fromkeys(self.invetory,0)
+		"""
+		Return an dictionary of all words, initialized with 0 apparition for each.
+		
+		:return: Dictionary of all words
+		"""
+		return dict.fromkeys(self.inventory, 0)
 
 #------------------------------------------------------------------------------#
 #                                                                              #
@@ -365,29 +433,50 @@ class DataSet:
 
 # If this is the main module, run this
 if __name__ == '__main__':
+
 	argsCount = len(sys.argv)
 	argsIndex = 1
-
+	
 	random.seed()
 
 	#
 	# NORMAL DATA SET
 	#
+	print("======================================================================")
 	print("Loading normal dataset ...")
-	dataSet = DataSet("./dataFull/normal", False)
+	dataSet = DataSet("./dataFull/normal", False, False)
 	
 	print("Evaluation accuracy (normal) - Division : ")
 	print("Accuracy -> " + str(dataSet.division()))
 	print("Evaluation accuracy (normal) - CrossValidation : ")
 	print("Accuracy -> " + str(dataSet.crossValidation()))
+	
+	print("======================================================================")
+	print("Loading randomized normal dataset ...")
+	dataSet = DataSet("./dataFull/normal", False, True)
+	
+	print("Evaluation accuracy (normal) (random) - Division : ")
+	print("Accuracy -> " + str(dataSet.division()))
+	print("Evaluation accuracy (normal) (random) - CrossValidation : ")
+	print("Accuracy -> " + str(dataSet.crossValidation()))
 
 	#
 	# TAGGED DATA SET
 	#
+	print("======================================================================")
 	print("Loading tagged dataset ...")
-	dataSetTagged = DataSet("./dataFull/tagged", True)
+	dataSetTagged = DataSet("./dataFull/tagged", True, False)
 	
 	print("Evaluation accuracy (tagged) - Division : ")
 	print("Accuracy -> " + str(dataSetTagged.division()))
 	print("Evaluation accuracy (tagged) - CrossValidation : ")
+	print("Accuracy -> " + str(dataSetTagged.crossValidation()))
+	
+	print("======================================================================")
+	print("Loading randomized tagged dataset ...")
+	dataSetTagged = DataSet("./dataFull/tagged", True, True)
+	
+	print("Evaluation accuracy (tagged) (random) - Division : ")
+	print("Accuracy -> " + str(dataSetTagged.division()))
+	print("Evaluation accuracy (tagged) (random) - CrossValidation : ")
 	print("Accuracy -> " + str(dataSetTagged.crossValidation()))
