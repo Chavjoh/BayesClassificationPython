@@ -262,7 +262,7 @@ class DataSet:
 		
 		:param dataList: DataFile list to reduce
 		:type dataList: list of dataFile
-		:return: None
+		:return: Count of all words (dictionary)
 		"""
 
 		wordsAll = self.inventoryWord()
@@ -277,7 +277,7 @@ class DataSet:
 		"""
 		Execute division algorithm (80% training, 20% testing).
 		
-		:return: None
+		:return: Accuracy (float)
 		"""
 		dataTrain = {}
 		dataTest = {}
@@ -295,7 +295,7 @@ class DataSet:
 		"""
 		Execute cross validation algorithm (window of 20% testing moving along 5 parts).
 		
-		:return: None
+		:return: Accuracy (float)
 		"""
 		result = 0
 		n = 5
@@ -322,11 +322,16 @@ class DataSet:
 				if self.debug:
 					print("Class " + str(j) + " -> " +  str(len(dataTrain[self.classes[j]])))
 			
-			if self.debug:
-				print("Total : " + str(len(dataTrain)))
-			
 			self.train(dataTrain)
 			self.test(dataTest)
+			
+			if self.debug:
+				print("Total : " + str(len(dataTrain)))
+				
+				# Used to check accuracy for each class :
+				print("EVALUATE POSITIVE " + str(i) + " -> " + str(self.evaluate(0.2, "positive") / n))
+				print("EVALUATE NEGATIVE " + str(i) + " -> " + str(self.evaluate(0.2, "negative") / n))
+			
 			result += self.evaluate(0.2) / n
 			
 		return result
@@ -378,19 +383,22 @@ class DataSet:
 				if self.classify(dataEntry) == className:
 					self.testSuccess[className] += 1
 
-	def evaluate(self, percentForTest):
+	def evaluate(self, percentForTest, className = None):
 		"""
 		Accuracy calculation to evaluate training algorithm.
 
 		:param percentForTest: Percent of the test in dataset
 		:type percentForTest: float
-		:return: float
+		:return: Accuracy (float)
 		"""
 		if self.debug:
 			print("Evaluating ...")
 		
-		accuracy = sum(self.testSuccess.values())/math.ceil(percentForTest*sum(len(v) for v in self.data.values()))
-
+		if className == None:
+			accuracy = sum(self.testSuccess.values())/math.ceil(percentForTest*sum(len(v) for v in self.data.values()))
+		else:
+			accuracy = self.testSuccess[className] / math.ceil(percentForTest * len(self.data[className]))
+		
 		return accuracy
 
 	def classify(self, dataFile):
@@ -448,6 +456,7 @@ if __name__ == '__main__':
 	
 	print("Evaluation accuracy (normal) - Division : ")
 	print("Accuracy -> " + str(dataSet.division()))
+	# print("Positive : " + str(dataSet.evaluate(0.2, "positive")) + " / Negative : " + str(dataSet.evaluate(0.2, "negative")))
 	print("Evaluation accuracy (normal) - CrossValidation : ")
 	print("Accuracy -> " + str(dataSet.crossValidation()))
 	
@@ -457,6 +466,7 @@ if __name__ == '__main__':
 	
 	print("Evaluation accuracy (normal) (random) - Division : ")
 	print("Accuracy -> " + str(dataSet.division()))
+	# print("Positive : " + str(dataSet.evaluate(0.2, "positive")) + " / Negative : " + str(dataSet.evaluate(0.2, "negative")))
 	print("Evaluation accuracy (normal) (random) - CrossValidation : ")
 	print("Accuracy -> " + str(dataSet.crossValidation()))
 
@@ -469,6 +479,7 @@ if __name__ == '__main__':
 	
 	print("Evaluation accuracy (tagged) - Division : ")
 	print("Accuracy -> " + str(dataSetTagged.division()))
+	# print("Positive : " + str(dataSetTagged.evaluate(0.2, "positive")) + " / Negative : " + str(dataSetTagged.evaluate(0.2, "negative")))
 	print("Evaluation accuracy (tagged) - CrossValidation : ")
 	print("Accuracy -> " + str(dataSetTagged.crossValidation()))
 	
@@ -478,5 +489,6 @@ if __name__ == '__main__':
 	
 	print("Evaluation accuracy (tagged) (random) - Division : ")
 	print("Accuracy -> " + str(dataSetTagged.division()))
+	# print("Positive : " + str(dataSetTagged.evaluate(0.2, "positive")) + " / Negative : " + str(dataSetTagged.evaluate(0.2, "negative")))
 	print("Evaluation accuracy (tagged) (random) - CrossValidation : ")
 	print("Accuracy -> " + str(dataSetTagged.crossValidation()))
