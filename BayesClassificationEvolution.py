@@ -2,20 +2,20 @@
 # coding: latin-1
 
 #------------------------------------------------------------------------------#
-# Artificial Intelligence - Bayes Classification Algorithms					#
+# Artificial Intelligence - Bayes Classification Algorithms                    #
 # ============================================================================ #
-# Organization: HE-Arc Engineering											 #
-# Developer(s): Etienne Frank												  #
-#			   Johan Chavaillaz											   #
-#																			  #
-# Filename:	 BayesClassification.py										 #
-# Version:	  1.0															#
+# Organization: HE-Arc Engineering                                             #
+# Developer(s): Etienne Frank                                                  #
+#               Johan Chavaillaz                                               #
+#                                                                              #
+# Filename:     BayesClassification.py                                         #
+# Version:      1.0                                                            #
 #------------------------------------------------------------------------------#
 
 #------------------------------------------------------------------------------#
-#																			  #
-#							   LIBRARIES IMPORT							   #
-#																			  #
+#                                                                              #
+#                               LIBRARIES IMPORT                               #
+#                                                                              #
 #------------------------------------------------------------------------------#
 
 import sys
@@ -25,12 +25,10 @@ import math
 import codecs
 
 #------------------------------------------------------------------------------#
-#																			  #
-#								   CLASSES									#
-#																			  #
+#                                                                              #
+#                                   CLASSES                                    #
+#                                                                              #
 #------------------------------------------------------------------------------#
-from pip._vendor.distlib.util import in_venv
-
 
 class DataFile:
 	""" Contains file analysis information """
@@ -340,16 +338,9 @@ class DataSet:
 		return dict
 
 #------------------------------------------------------------------------------#
-#																			  #
-#							 UTILITIES FUNCTIONS							  #
-#																			  #
-#------------------------------------------------------------------------------#
-
-
-#------------------------------------------------------------------------------#
-#																			  #
-#							   "MAIN" FUNCTION								#
-#																			  #
+#                                                                              #
+#                                     MAIN                                     #
+#                                                                              #
 #------------------------------------------------------------------------------#
 
 # If this is the main module, run this
@@ -363,15 +354,18 @@ if __name__ == '__main__':
 	# NORMAL DATA SET
 	#
 	dataSet = DataSet("./dataFull/normal", False)
-	# print(dataSet.dataPositive[500])
 	
-	print("Evaluation accuracy (normal) - Division : " + str(dataSet.division()))
-	print("Evaluation accuracy (normal) - CrossValidation : " + str(dataSet.crossValidation()))
+	print("Evaluation accuracy (normal) - Division : ")
+	print("Accuracy -> " + str(dataSet.division()))
+	print("Evaluation accuracy (normal) - CrossValidation : ")
+	print("Accuracy -> " + str(dataSet.crossValidation()))
 
 	#
 	# TAGGED DATA SET
 	#
 	dataSetTagged = DataSet("./dataFull/tagged", True)
-	# print(dataSetTagged.dataPositive[500])
-	print("Evaluation accuracy (tagged) - Division : " + str(dataSetTagged.division()))
-	print("Evaluation accuracy (tagged) - CrossValidation : " + str(dataSetTagged.crossValidation()))
+	
+	print("Evaluation accuracy (tagged) - Division : ")
+	print("Accuracy -> " + str(dataSetTagged.division()))
+	print("Evaluation accuracy (tagged) - CrossValidation : ")
+	print("Accuracy -> " + str(dataSetTagged.crossValidation()))
