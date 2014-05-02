@@ -119,7 +119,7 @@ class DataFile:
 class DataSet:
 	""" Contains all DataFile """
 
-	def __init__(self, dataSetPath, isTagged):
+	def __init__(self, dataSetPath, isTagged, random):
 		"""
 		:param dataSetPath: Path to data set folder that contains positive and negative folder messages.
 		:type dataSetPath: str
@@ -137,7 +137,8 @@ class DataSet:
 		self.testSuccess = {}
 
 		self.isTagged = isTagged
-
+		self.random = random
+		
 		self.dataPath = dataSetPath
 
 		self.wordsProbability = {}
@@ -167,7 +168,7 @@ class DataSet:
 			directorySplit = directoryPath.split("/")[-1]
 			if directorySplit in self.classes:
 
-				if not self.debug:
+				if self.random:
 					random.shuffle(fileNameList)
 
 				for index, fileName in enumerate(fileNameList):
@@ -353,7 +354,7 @@ if __name__ == '__main__':
 	#
 	# NORMAL DATA SET
 	#
-	dataSet = DataSet("./dataFull/normal", False)
+	dataSet = DataSet("./dataFull/normal", False, True)
 	
 	print("Evaluation accuracy (normal) - Division : ")
 	print("Accuracy -> " + str(dataSet.division()))
@@ -363,7 +364,7 @@ if __name__ == '__main__':
 	#
 	# TAGGED DATA SET
 	#
-	dataSetTagged = DataSet("./dataFull/tagged", True)
+	dataSetTagged = DataSet("./dataFull/tagged", True, True)
 	
 	print("Evaluation accuracy (tagged) - Division : ")
 	print("Accuracy -> " + str(dataSetTagged.division()))
