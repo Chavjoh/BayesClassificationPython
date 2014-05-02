@@ -2,20 +2,20 @@
 # coding: latin-1
 
 #------------------------------------------------------------------------------#
-# Artificial Intelligence - Bayes Classification Algorithms                    #
+# Artificial Intelligence - Bayes Classification Algorithms					#
 # ============================================================================ #
-# Organization: HE-Arc Engineering                                             #
-# Developer(s): Etienne Frank                                                  #
-#               Johan Chavaillaz                                               #
-#                                                                              #
-# Filename:     BayesClassification.py                                         #
-# Version:      1.0                                                            #
+# Organization: HE-Arc Engineering											 #
+# Developer(s): Etienne Frank												  #
+#			   Johan Chavaillaz											   #
+#																			  #
+# Filename:	 BayesClassification.py										 #
+# Version:	  1.0															#
 #------------------------------------------------------------------------------#
 
 #------------------------------------------------------------------------------#
-#                                                                              #
-#                               LIBRARIES IMPORT                               #
-#                                                                              #
+#																			  #
+#							   LIBRARIES IMPORT							   #
+#																			  #
 #------------------------------------------------------------------------------#
 
 import sys
@@ -25,365 +25,353 @@ import math
 import codecs
 
 #------------------------------------------------------------------------------#
-#                                                                              #
-#                                   CLASSES                                    #
-#                                                                              #
+#																			  #
+#								   CLASSES									#
+#																			  #
 #------------------------------------------------------------------------------#
 from pip._vendor.distlib.util import in_venv
 
 
 class DataFile:
-    """ Contains file analysis information """
+	""" Contains file analysis information """
 
-    def __init__(self, **keys):
-        """
-        Create a new DataFile
-        :param fileContent: Data file content (=message)
-        :type fileContent: str
-        :param isPositive: True if positive message, False otherwise
-        :type isPositive: bool
-        :rtype: str
-        """
-        self.className = keys['className']
-        self.fileContent = keys['fileContent']
-        self.exceptionWords = keys['wordException']
-        self.words = []
-        self.wordsCount = {}
+	def __init__(self, **keys):
+		"""
+		Create a new DataFile
+		:param fileContent: Data file content (=message)
+		:type fileContent: str
+		:param isPositive: True if positive message, False otherwise
+		:type isPositive: bool
+		:rtype: str
+		"""
+		self.className = keys['className']
+		self.fileContent = keys['fileContent']
+		self.exceptionWords = keys['wordException']
+		self.words = []
+		self.wordsCount = {}
 
-        if keys['isTagged']:
-            self.loadTagged()
-        else:
-            self.load()
+		if keys['isTagged']:
+			self.loadTagged()
+		else:
+			self.load()
 
-        self.removeExceptionWords()
+		self.removeExceptionWords()
 
-        self.calculateWordsCount()
-        self.wordsSum = sum(self.wordsCount.values())
+		self.calculateWordsCount()
+		self.wordsSum = sum(self.wordsCount.values())
 
-    def load(self):
-        """
-        Load words from fileContent for file that contains only message
-        :return: None
-        """
+	def load(self):
+		"""
+		Load words from fileContent for file that contains only message
+		:return: None
+		"""
 
-        self.words = self.fileContent.split()
+		self.words = self.fileContent.split()
 
-    def loadTagged(self):
-        """
-        Load words from fileContent for file that contains more information with message
-        :return: None
-        """
-        for line in self.fileContent.split("\n"):
-            try:
-                self.words.append(line.split("\t")[2])
-            except IndexError:
-                pass
+	def loadTagged(self):
+		"""
+		Load words from fileContent for file that contains more information with message
+		:return: None
+		"""
+		for line in self.fileContent.split("\n"):
+			try:
+				self.words.append(line.split("\t")[2])
+			except IndexError:
+				pass
 
-    def removeExceptionWords(self):
-        exception = []
-        with codecs.open(self.exceptionWords, 'r', 'UTF-8') as file:
-            exception = file.read().split("\r\n")
+	def removeExceptionWords(self):
+		exception = []
+		with codecs.open(self.exceptionWords, 'r', 'UTF-8') as file:
+			exception = file.read().split("\r\n")
 
-        for x in exception:
-            try:
-                self.words.remove(x)
-            except ValueError:
-                pass
+		for x in exception:
+			try:
+				self.words.remove(x)
+			except ValueError:
+				pass
 
-    def calculateWordsCount(self):
-        """
-        Calculate the number of occurrence of words.
-        :return: None
-        """
+	def calculateWordsCount(self):
+		"""
+		Calculate the number of occurrence of words.
+		:return: None
+		"""
 
-        for word in self.words:
-            try:
-                self.wordsCount[word] += 1
-            except KeyError:
-                self.wordsCount[word] = 1
+		for word in self.words:
+			try:
+				self.wordsCount[word] += 1
+			except KeyError:
+				self.wordsCount[word] = 1
 
-        # print("+"+str(self.wordsCount))
-        # print("+"+self.className+" "+str(self.words))
+		# print("+"+str(self.wordsCount))
+		# print("+"+self.className+" "+str(self.words))
 
-    def __repr__(self):
-        information = "Input file : " + self.fileContent + "\n"
-        information += "============" + "\n"
+	def __repr__(self):
+		information = "Input file : " + self.fileContent + "\n"
+		information += "============" + "\n"
 
-        for key, value in self.wordsCount.items():
-            information += str(key) + " " + str(value) + "\n"
+		for key, value in self.wordsCount.items():
+			information += str(key) + " " + str(value) + "\n"
 
-        information += "============" + "\n"
-        information += "Word count : " + str(self.wordsSum) + "\n"
+		information += "============" + "\n"
+		information += "Word count : " + str(self.wordsSum) + "\n"
 
-        return information
+		return information
 
 
 class DataSet:
-    """ Contains all DataFile """
+	""" Contains all DataFile """
 
-    def __init__(self, dataSetPath, isTagged, method):
-        """
-        :param dataSetPath: Path to data set folder that contains positive and negative folder messages.
-        :type dataSetPath: str
-        :param isTagged: Indicate if dataSet is tagged (Different file structure)
-        :type isTagged: bool
-        :return: object
-        """
-        if dataSetPath[-1] != "/":
-            dataSetPath += "/"
+	def __init__(self, dataSetPath, isTagged):
+		"""
+		:param dataSetPath: Path to data set folder that contains positive and negative folder messages.
+		:type dataSetPath: str
+		:param isTagged: Indicate if dataSet is tagged (Different file structure)
+		:type isTagged: bool
+		:return: object
+		"""
+		if dataSetPath[-1] != "/":
+			dataSetPath += "/"
 
-        # classes are directories names
-        self.classes = ['positive', 'negative']
-        self.data = {}
+		# Classes are directories names
+		self.classes = ['positive', 'negative']
+		self.data = {}
 
-        self.testSuccess = {}
+		self.testSuccess = {}
 
-        self.isTagged = isTagged
+		self.isTagged = isTagged
 
-        self.dataPath = dataSetPath
-        # self.positivePath = self.dataPath + "/positive"
-        # self.negativePath = self.dataPath + "/negative"
+		self.dataPath = dataSetPath
 
-        self.wordsProbability = {}
-        self.allWordList = []
-        # self.wordsProbabilityPositive = {}
-        # self.wordsProbabilityNegative = {}
+		self.wordsProbability = {}
+		self.allWordList = []
+		
+		self.debug = False
+		self.load(self.dataPath)
 
-        self.method = method
+		self.inventoryWord()
 
-        self.debug = False
-        self.load(self.dataPath)
+		if self.debug:
+			for className in self.classes:
+				print(str(className)+" "+str(len(self.data[className])))
 
-        self.inventoryWord()
+	def load(self, path):
 
-        if self.debug:
-            for className in self.classes:
-                print(str(className)+" "+str(len(self.data[className])))
+		if path[-1] == "/":
+			path = path[0:-1]
 
-    def load(self, path):
+		# print("Directory" + path)
+		for (directoryPath, subDirectoryList, fileNameList) in walk(path):
 
-        if path[-1] == "/":
-            path = path[0:-1]
+			# Debug
+			# print(fileNameList)
+			# print(directoryPath)
+			# print(subDirectoryList)
+			directorySplit = directoryPath.split("/")[-1]
+			if directorySplit in self.classes:
 
-        # print("Directory" + path)
-        for (directoryPath, subDirectoryList, fileNameList) in walk(path):
+				if not self.debug:
+					random.shuffle(fileNameList)
 
-            # Debug
-            # print(fileNameList)
-            # print(directoryPath)
-            # print(subDirectoryList)
-            directorySplit = directoryPath.split("/")[-1]
-            if directorySplit in self.classes:
+				for index, fileName in enumerate(fileNameList):
+					# print(directoryPath + '/' + fileName)
+					fileContent = ''.join(open(directoryPath + '/' + fileName, 'r', encoding="utf-8").readlines())
 
-                if not self.debug:
-                    random.shuffle(fileNameList)
+					currentDataFile = DataFile(
+						fileContent=fileContent,
+						className=directorySplit,
+						isTagged=self.isTagged,
+						wordException=directoryPath+"/../uselessWords.txt"
+					)
 
-                for index, fileName in enumerate(fileNameList):
-                    # print(directoryPath + '/' + fileName)
-                    fileContent = ''.join(open(directoryPath + '/' + fileName, 'r', encoding="utf-8").readlines())
+					try:
+						self.data[directorySplit].append(currentDataFile)
+					except:
+						self.data[directorySplit] = [currentDataFile]
 
-                    currentDataFile = DataFile(
-                        fileContent=fileContent,
-                        className=directorySplit,
-                        isTagged=self.isTagged,
-                        wordException=directoryPath+"/../uselessWords.txt"
-                    )
+			for subDirectory in subDirectoryList:
+				self.load(path + "/" + subDirectory)
 
-                    try:
-                        self.data[directorySplit].append(currentDataFile)
-                    except:
-                        self.data[directorySplit] = [currentDataFile]
+			break
 
-            for subDirectory in subDirectoryList:
-                self.load(path + "/" + subDirectory)
+	def reduceWordsCount(self, dataList):
+		"""
+		Reduce the count of all words to one dictionary
+		:param dataList: DataFile list to reduce
+		:type dataList: list of dataFile
+		:return: None
+		"""
 
-            break
+		wordsAll = self.inventoryWord()
 
-    def calculateProbability(self, tab):
-        """
-        Calculate the probability for each word to be positive of negative
-        :return: None
-        """
+		for data in dataList:
+			# print("+"+str(data.wordsCount))
+			for word, value in data.wordsCount.items():
+				wordsAll[word] += value
 
-        for className in self.classes:
-            self.wordsProbability[className] = {}
+		return wordsAll
 
-            maxIndex = int(0.8 * len(self.data[className]))
+	def division(self):
+		dataTrain = {}
+		dataTest = {}
+		
+		for j in range(0, len(self.classes)):
+			total = len(self.data[self.classes[j]])
+			dataTrain[self.classes[j]] = self.data[self.classes[j]][0 : round(total * 0.8)] # 80% Train
+			dataTest[self.classes[j]] = self.data[self.classes[j]][round(total * 0.8) : total] # 20% Test
+		
+		self.train(dataTrain)
+		self.test(dataTest)
+		return self.evaluate()
 
-            # 80% of data used for training
-            wordsAll = self.reduceWordsCount(self.data[className][:maxIndex])
-            if self.debug:
-                print("- "+className+" "+str(wordsAll))
+	def crossValidation(self):
 
-            for word, number in wordsAll.items():
-                self.wordsProbability[className][word] = \
-                    (wordsAll[word] + 1) / (sum(wordsAll.values()) + len(wordsAll))
+		result = 0
+		n = 5
+		
+		for i in range(0, n):
+			
+			dataTrain = {}
+			dataTest = {}
+			
+			for j in range(0, len(self.classes)):
+				total = len(self.data[self.classes[j]])
+				dataTrain[self.classes[j]] = []
+				dataTest[self.classes[j]] = []
+				# print("Class total : " + str(total))
+				if i > 0:
+					dataTrain[self.classes[j]].extend(self.data[self.classes[j]][0 : round(i* (total / n))])
+				if i < (n-1):
+					dataTrain[self.classes[j]].extend(self.data[self.classes[j]][round((i + 1) * (total / n)) : total])
+				
+				dataTest[self.classes[j]].extend(self.data[self.classes[j]][round(i * (total / n)) : round((i + 1) * (total / n))])
+				
+				# print("Class " + str(j) + " -> " +  str(len(dataTrain[self.classes[j]])))
+			
+			# print("Total : " + str(len(dataTrain)))
+			self.train(dataTrain)
+			self.test(dataTest)
+			result += self.evaluate() / n
+			
+		return result
 
-            if self.debug:
-                print(className + " " + str(self.wordsProbability[className]))
+	def train(self, data):
+		"""
+		Training for Bayes algorithm
 
-    def reduceWordsCount(self, dataList):
-        """
-        Reduce the count of all words to one dictionary
-        :param dataList: DataFile list to reduce
-        :type dataList: list of dataFile
-        :return: None
-        """
+		:return: None
+		"""
 
-        wordsAll = self.inventoryWord()
+		for className in self.classes:
+			self.wordsProbability[className] = {}
+			
+			wordsAll = self.reduceWordsCount(data[className])
+			
+			if self.debug:
+				print("- " + className + " " + str(wordsAll))
 
-        for data in dataList:
-            # print("+"+str(data.wordsCount))
-            for word, value in data.wordsCount.items():
-                wordsAll[word] += value
+			for word, number in wordsAll.items():
+				self.wordsProbability[className][word] = \
+					(wordsAll[word] + 1) / (sum(wordsAll.values()) + len(wordsAll))
 
-        return wordsAll
+			if self.debug:
+				print(className + " " + str(self.wordsProbability[className]))
 
-    def division(self):
-        self.train(0, (len(self.data)/2)*0.8)
-        return self.test((len(self.data)/2)*0.8,len(self.data)/2 )
+	def test(self, data):
+		"""
+		Testing results from bayes algorithm
+		Save number of correct values
+		Calculate the probability for each word to be positive of negative
+		
+		:return: None
+		"""
 
-    def crossValidation(self):
+		for className in self.classes:
+			self.testSuccess[className] = 0
 
-        result = 0
-        n = 5
+			for dataEntry in data[className]:
+				if self.classify(dataEntry) == className:
+					self.testSuccess[className] += 1
 
-        dataTrain = {}
-        
+	def evaluate(self):
+		"""
+		Accuracy calculation to evaluate training algorithm
+		:return: float
+		"""
+		# accuracy = self.testSuccess / (len(self.dataPositive) + len(self.negativePath))
+		accuracy = sum(self.testSuccess.values())/math.ceil(0.2*sum(len(v) for v in self.data.values()))
 
-        minIndex = 0
-        maxIndex = (len(self.data)/2)/n
+		return accuracy
 
-        for i in range(0, n):
-            self.train()
-            result += self.test()/n
-        return result
+	def classify(self, dataFile):
+		"""
+		Classify a dataFile to positive or negative
 
-    def train(self, tab):
-        """
-        Training for Bayes algorithm
+		:param dataFile: DataFile to classify
+		:type dataFile: DataFile
+		:return: True if positive, False otherwise
+		"""
 
-        :return: None
-        """
+		# Initialization
+		probability = {}
+		maxClass = None
 
-        self.calculateProbability(tab)
+		for className in self.classes:
+			probability[className] = 1
 
-    def test(self, tab):
-        """
-        Testing results from bayes algorithm
-        Save number of correct values
+			for word, wordProbability in self.wordsProbability[className].items():
+				try:
+					probability[className] *= pow(wordProbability, dataFile.wordsCount[word])
+				except KeyError:
+					pass
 
-        :return: None
-        """
+			if not maxClass or (probability[maxClass] < probability[className]):
+				maxClass = className
 
-        for className in self.classes:
-            maxIndex = int(0.8 * len(self.data[className]))
+		return maxClass
 
-            self.testSuccess[className] = 0
+	def inventoryWord(self):
+		# TODO optimization
+		dict = {}
+		for className,data in self.data.items():
+			for dataFile in data:
+				for word in dataFile.wordsCount.keys():
+					dict[word] = 0
 
-            for data in self.data[className][maxIndex:]:
-                if self.classify(data) == className:
-                    self.testSuccess[className] += 1
-
-    def evaluate(self):
-        """
-        Accuracy calculation to evaluate training algorithm
-        :return: float
-        """
-        # accuracy = self.testSuccess / (len(self.dataPositive) + len(self.negativePath))
-        accuracy = sum(self.testSuccess.values())/math.ceil(0.2*sum(len(v) for v in self.data.values()))
-
-        return accuracy
-
-    def classify(self, dataFile):
-        """
-        Classify a dataFile to positive or negative
-
-        :param dataFile: DataFile to classify
-        :type dataFile: DataFile
-        :return: True if positive, False otherwise
-        """
-
-        # Initialization
-        probability = {}
-        maxClass = None
-
-        for className in self.classes:
-            probability[className] = 1
-
-            for word, wordProbability in self.wordsProbability[className].items():
-                try:
-                    probability[className] *= pow(wordProbability, dataFile.wordsCount[word])
-                except KeyError:
-                    pass
-
-            if not maxClass or (probability[maxClass] < probability[className]):
-                maxClass = className
-
-        return maxClass
-
-    def inventoryWord(self):
-        # TODO optimization
-        dict = {}
-        for className,data in self.data.items():
-            for dataFile in data:
-                for word in dataFile.wordsCount.keys():
-                    dict[word] = 0
-
-        return dict
+		return dict
 
 #------------------------------------------------------------------------------#
-#                                                                              #
-#                             UTILITIES FUNCTIONS                              #
-#                                                                              #
+#																			  #
+#							 UTILITIES FUNCTIONS							  #
+#																			  #
 #------------------------------------------------------------------------------#
 
 
 #------------------------------------------------------------------------------#
-#                                                                              #
-#                               "MAIN" FUNCTION                                #
-#                                                                              #
+#																			  #
+#							   "MAIN" FUNCTION								#
+#																			  #
 #------------------------------------------------------------------------------#
 
 # If this is the main module, run this
 if __name__ == '__main__':
-    argsCount = len(sys.argv)
-    argsIndex = 1
+	argsCount = len(sys.argv)
+	argsIndex = 1
 
-    random.seed()
+	random.seed()
 
-    #
-    # NORMAL DATA SET
-    #
-    dataSet = DataSet("./dataFull/normal", False, 'division')
-    # print(dataSet.dataPositive[500])
-    dataSet.train()
-    dataSet.test()
-    print("Evaluation accuracy (normal) : " + str(dataSet.evaluate()))
+	#
+	# NORMAL DATA SET
+	#
+	dataSet = DataSet("./dataFull/normal", False)
+	# print(dataSet.dataPositive[500])
+	
+	print("Evaluation accuracy (normal) - Division : " + str(dataSet.division()))
+	print("Evaluation accuracy (normal) - CrossValidation : " + str(dataSet.crossValidation()))
 
-    #
-    # TAGGED DATA SET
-    #
-    dataSetTagged = DataSet("./dataFull/tagged", True, 'division')
-    # print(dataSetTagged.dataPositive[500])
-    dataSetTagged.train()
-    dataSetTagged.test()
-    print("Evaluation accuracy (tagged) : " + str(dataSetTagged.evaluate()))
-
-    #
-    # NORMAL DATA SET
-    #
-    dataSet = DataSet("./dataFull/normal", False, 'cross')
-    # print(dataSet.dataPositive[500])
-    dataSet.train()
-    dataSet.test()
-    print("Evaluation accuracy (normal) : " + str(dataSet.evaluate()))
-
-    #
-    # TAGGED DATA SET
-    #
-    dataSetTagged = DataSet("./dataFull/tagged", True, 'cross')
-    # print(dataSetTagged.dataPositive[500])
-    dataSetTagged.train()
-    dataSetTagged.test()
-    print("Evaluation accuracy (tagged) : " + str(dataSetTagged.evaluate()))
+	#
+	# TAGGED DATA SET
+	#
+	dataSetTagged = DataSet("./dataFull/tagged", True)
+	# print(dataSetTagged.dataPositive[500])
+	print("Evaluation accuracy (tagged) - Division : " + str(dataSetTagged.division()))
+	print("Evaluation accuracy (tagged) - CrossValidation : " + str(dataSetTagged.crossValidation()))
