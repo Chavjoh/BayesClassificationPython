@@ -52,7 +52,7 @@ class DataFile:
 		self.words = []
 
 		# Dictionary that contains apparition number of each word
-		self.wordsCount = {}
+		self.wordsCount = defaultdict(int)
 
 		# Loading tagged or normal content
 		if keys['isTagged']:
@@ -107,10 +107,7 @@ class DataFile:
 		"""
 
 		for word in self.words:
-			try:
-				self.wordsCount[word] += 1
-			except KeyError:
-				self.wordsCount[word] = 1
+			self.wordsCount[word] += 1
 
 		# print("+"+str(self.wordsCount))
 		# print("+"+self.className+" "+str(self.words))
@@ -152,15 +149,12 @@ class DataSet:
 		self.dataPath = dataSetPath
 
 		self.wordsProbability = {}
-		self.allWordList = []
 
 		self.invetory = {}
 		
 		self.debug = False
 		self.load(self.dataPath)
-
-		self.inventoryWord()
-
+		
 		if self.debug:
 			for className in self.classes:
 				print(str(className)+" "+str(len(self.data[className])))
@@ -274,7 +268,7 @@ class DataSet:
 
 		:return: None
 		"""
-
+		print("train")
 		for className in self.classes:
 			self.wordsProbability[className] = {}
 			
@@ -298,7 +292,7 @@ class DataSet:
 		
 		:return: None
 		"""
-
+		print("test")
 		for className in self.classes:
 			self.testSuccess[className] = 0
 
@@ -314,6 +308,7 @@ class DataSet:
 		:type percentForTest: float
 		:return: float
 		"""
+		print("evaluate")
 		# accuracy = self.testSuccess / (len(self.dataPositive) + len(self.negativePath))
 		accuracy = sum(self.testSuccess.values())/math.ceil(percentForTest*sum(len(v) for v in self.data.values()))
 
@@ -336,10 +331,8 @@ class DataSet:
 			probability[className] = 1
 
 			for word, wordProbability in self.wordsProbability[className].items():
-				try:
+				if word in dataFile.wordsCount:
 					probability[className] *= pow(wordProbability, dataFile.wordsCount[word])
-				except KeyError:
-					pass
 
 			if not maxClass or (probability[maxClass] < probability[className]):
 				maxClass = className
